@@ -23,7 +23,7 @@ def parse(filename):
                 streams[stream_id] = payload
     file = filename.split('/')[-1].split('.')[0] + '.csv'
     f = open('csv/{}'.format(file),'w',encoding='utf8')
-    w = csv.DictWriter(f,['stream_index','source_ip','dest_ip','pkt_count','tcp_src_port','tcp_dest_port','tls_version','tls_cert_length','tls_issuer','tls_algorithm_id','tls_handshake_ciphersuite','tls_handshake_extensions_length','tls_handshake_server_curve_type','tls_handshake_server_named_curve','tls_handshake_echde_server_pubkey_len','tls_handshake_echde_client_pubkey_len','tls_server_name','tls_ja3_hash','tls_cipher_suite_length'])
+    w = csv.DictWriter(f,['stream_index','source_ip','dest_ip','pkt_count','tcp_src_port','tcp_dest_port','tls_version','tls_max_client_tls_version','tls_cipher_suites_length',"tls_is_heartbeat_present","tls_is_record_limit_extension_present","tls_supported_group_length","tls_key_share_length","tls_sig_hash_alg_length",'tls_cert_length','tls_cert_size','tls_cert_begin','tls_cert_end','tls_issuer','tls_algorithm_id','tls_handshake_ciphersuite','tls_handshake_extensions_length','tls_handshake_server_curve_type','tls_handshake_server_named_curve','tls_handshake_echde_server_pubkey_len','tls_handshake_echde_client_pubkey_len','tls_server_name','tls_ja3_hash'])
     w.writeheader()
     records = list(streams.values())
     for record in records:
@@ -33,28 +33,52 @@ def parse(filename):
     
 def get_tls_payload(tls_payload, stream):
     stream['tls'] = stream['tls'] if 'tls' in stream else {}
-    if hasattr(tls_payload, "handshake_type") and tls_payload.handshake_type == '2':
+    if hasattr(tls_payload, 'handshake_type') and tls_payload.handshake_type == '1':
+        stream['tls']['max_client_tls_version'] = '0x304' if hasattr(tls_payload, 'handshake_extensions_supported_versions_len') else '0x303'
+        stream['tls']['cipher_suites_length'] = int(tls_payload.handshake_cipher_suites_length) / 2
+        # print(len(tls_payload.handshake_extension_type.all_fields))
+        for extension_type in tls_payload.handshake_extension_type.all_fields:
+            # print(extension_type.get_default_value())
+            if extension_type.get_default_value() == '15':
+                stream['tls']['is_heartbeat_present'] = True
+            else:
+                stream['tls']['is_heartbeat_present'] = stream['tls']['is_heartbeat_present'] if hasattr(stream['tls'], 'is_heartbeat_present') else False
+        for extension_type in tls_payload.handshake_extension_type.all_fields:
+            if extension_type.get_default_value() == '28':
+                stream['tls']['is_record_limit_extension_present'] = True
+            else:
+                stream['tls']['is_record_limit_extension_present'] = stream['tls']['is_record_limit_extension_present'] if hasattr(stream['tls'], 'is_record_limit_extension_present') else False
+        stream['tls']['key_share_length'] = len(tls_payload.handshake_extension_key_share_group.all_fields) if hasattr(tls_payload, "handshake_extension_key_share_group") else None
+        stream['tls']['sig_hash_alg_length'] = int(tls_payload.handshake_sig_hash_alg_len) / 2
+        stream['tls']['supported_group_length'] = int(tls_payload.handshake_extensions_supported_groups_length) / 2
 
+    if hasattr(tls_payload, "handshake_type") and tls_payload.handshake_type == '2':
         stream['tls']['version'] = tls_payload.handshake_extensions_supported_version if hasattr(tls_payload,"handshake_extensions_supported_version") else '0x0303' 
-    if hasattr(tls_payload,'handshake_certificate_length'):
-        stream['tls']['cert_length'] = tls_payload.handshake_certificate_length
-    if hasattr(tls_payload, 'x509sat_uTF8String'):
-        stream['tls']['issuer'] = tls_payload.x509sat_uTF8String
-    if hasattr(tls_payload, 'x509af_algorithm_id'):
-        stream['tls']['algorithm_id'] = tls_payload.x509af_algorithm_id
+    if hasattr(tls_payload,'handshake_certificates'):
+        stream['tls']['cert_length'] = len(tls_payload.handshake_certificate.all_fields)
+    if hasattr(tls_payload,'handshake_certificates_length'):
+        stream['tls']['cert_size'] = tls_payload.handshake_certificates_length
+    if hasattr(tls_payload, 'x509af_utcTime'):
+        stream['tls']['cert_begin'] = tls_payload.x509af_utcTime.all_fields[0].get_default_value()
+    if hasattr(tls_payload, 'x509af_utcTime'):
+        stream['tls']['cert_end'] = tls_payload.x509af_utcTime.all_fields[1].get_default_value()
+    # if hasattr(tls_payload, 'x509sat_uTF8String'):
+    #     stream['tls']['issuer'] = tls_payload.x509sat_uTF8String
+    # if hasattr(tls_payload, 'x509af_algorithm_id'):
+    #     stream['tls']['algorithm_id'] = tls_payload.x509af_algorithm_id
     if hasattr(tls_payload, "handshake_ciphersuite"):
         stream['tls']['handshake_ciphersuite'] = tls_payload.handshake_ciphersuite
     if hasattr(tls_payload, 'handshake_extensions_length'):
         stream['tls']['handshake_extensions_length'] = tls_payload.handshake_extensions_length
     ## ecdhe pubkey entities
-    if hasattr(tls_payload,"handshake_server_curve_type"):
-        stream['tls']['handshake_server_curve_type'] = tls_payload.handshake_server_curve_type
-    if hasattr(tls_payload,"handshake_server_named_curve"):
-        stream['tls']['handshake_server_named_curve'] = tls_payload.handshake_server_named_curve
-    if hasattr(tls_payload, "handshake_server_point_len"):
-        stream['tls']['handshake_echde_server_pubkey_len'] = tls_payload.handshake_server_point_len
-    if hasattr(tls_payload, "handshake_client_point_len"):
-        stream['tls']['handshake_echde_client_pubkey_len'] = tls_payload.handshake_client_point_len        
+    # if hasattr(tls_payload,"handshake_server_curve_type"):
+    #     stream['tls']['handshake_server_curve_type'] = tls_payload.handshake_server_curve_type
+    # if hasattr(tls_payload,"handshake_server_named_curve"):
+    #     stream['tls']['handshake_server_named_curve'] = tls_payload.handshake_server_named_curve
+    # if hasattr(tls_payload, "handshake_server_point_len"):
+    #     stream['tls']['handshake_echde_server_pubkey_len'] = tls_payload.handshake_server_point_len
+    # if hasattr(tls_payload, "handshake_client_point_len"):
+    #     stream['tls']['handshake_echde_client_pubkey_len'] = tls_payload.handshake_client_point_len        
     if hasattr(tls_payload,"handshake_type"):
         for record in tls_payload.handshake_type.all_fields:
             if record.get_default_value() == '1':
