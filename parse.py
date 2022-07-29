@@ -22,7 +22,7 @@ def parse(filename):
                 streams[stream_id] = payload
     file = filename.split('/')[-1].split('.')[0] + '.csv'
     f = open('csv/{}'.format(file),'w',encoding='utf8')
-    w = csv.DictWriter(f,['stream_index','source_ip','dest_ip','pkt_count','tcp_src_port','tcp_dest_port','tls_version','tls_max_client_tls_version','tls_cipher_suites_length',"tls_is_heartbeat_present","tls_is_record_limit_extension_present","tls_supported_group_length","tls_key_share_length","tls_selected_group","tls_ec_points_format_length","tls_sig_hash_alg_length",'tls_cert_length','tls_cert_size','tls_cert_begin','tls_cert_end','tls_issuer','tls_algorithm_id','tls_handshake_ciphersuite','tls_handshake_extensions_length','tls_server_name','tls_ja3_hash'])
+    w = csv.DictWriter(f,['stream_index','source_ip','dest_ip','pkt_count','tcp_src_port','tcp_dest_port','tls_version','tls_max_client_tls_version','tls_server_name','tls_cipher_suites_length',"tls_is_heartbeat_present","tls_is_record_limit_extension_present","tls_supported_group_length","tls_key_share_length","tls_selected_group",'tls_handshake_ciphersuite','tls_key_share_group',"tls_ec_points_format_length","tls_sig_hash_alg_length",'tls_cert_length','tls_cert_size','tls_cert_begin','tls_cert_end','tls_handshake_extensions_length','tls_ja3_hash'])
     w.writeheader()
     records = list(streams.values())
     for record in records:
@@ -47,13 +47,17 @@ def get_tls_payload(tls_payload, stream):
         stream['tls']['key_share_length'] = len(tls_payload.handshake_extensions_key_share_group.all_fields) if hasattr(tls_payload, "handshake_extensions_key_share_group") else None
         stream['tls']['supported_group_length'] = int(tls_payload.handshake_extensions_supported_groups_length) / 2
         stream['tls']['sig_hash_alg_length'] = int(tls_payload.handshake_sig_hash_alg_len) / 2
-        
+        stream['tls']['server_name'] = tls_payload.handshake_extensions_server_name
+        stream['tls']['ja3_hash'] = tls_payload.handshake_ja3
         if hasattr(tls_payload, 'handshake_extensions_ec_point_formats_length'):
             stream['tls']['ec_points_format_length'] = int(tls_payload.handshake_extensions_ec_point_formats_length)
     if hasattr(tls_payload, 'handshake_extensions_key_share_group') and tls_payload.handshake_type == '2':
             stream['tls']['selected_group'] = tls_payload.handshake_extensions_key_share_group
+    
     if hasattr(tls_payload, "handshake_type") and tls_payload.handshake_type == '2':
         stream['tls']['version'] = tls_payload.handshake_extensions_supported_version if hasattr(tls_payload,"handshake_extensions_supported_version") else '0x0303' 
+    if hasattr(tls_payload, 'handshake_extensions_key_share_group'):
+        stream['tls']['key_share_group'] = tls_payload.handshake_extensions_key_share_group
     if hasattr(tls_payload,'handshake_certificates'):
         stream['tls']['cert_length'] = len(tls_payload.handshake_certificate.all_fields)
     if hasattr(tls_payload,'handshake_certificates_length'):
@@ -75,11 +79,6 @@ def get_tls_payload(tls_payload, stream):
     #     stream['tls']['handshake_echde_server_pubkey_len'] = tls_payload.handshake_server_point_len
     # if hasattr(tls_payload, "handshake_client_point_len"):
     #     stream['tls']['handshake_echde_client_pubkey_len'] = tls_payload.handshake_client_point_len        
-    if hasattr(tls_payload,"handshake_type"):
-        for record in tls_payload.handshake_type.all_fields:
-            if record.get_default_value() == '1':
-                    stream['tls']['server_name'] = tls_payload.handshake_extensions_server_name
-                    stream['tls']['ja3_hash'] = tls_payload.handshake_ja3
     return stream
 def flatten(d, parent_key='', sep='_'):
     items = []
