@@ -70,15 +70,6 @@ def get_tls_payload(tls_payload, stream):
         stream['tls']['handshake_ciphersuite'] = tls_payload.handshake_ciphersuite
     if hasattr(tls_payload, 'handshake_extensions_length'):
         stream['tls']['handshake_extensions_length'] = tls_payload.handshake_extensions_length
-    ## ecdhe pubkey entities
-    # if hasattr(tls_payload,"handshake_server_curve_type"):
-    #     stream['tls']['handshake_server_curve_type'] = tls_payload.handshake_server_curve_type
-    # if hasattr(tls_payload,"handshake_server_named_curve"):
-    #     stream['tls']['handshake_server_named_curve'] = tls_payload.handshake_server_named_curve
-    # if hasattr(tls_payload, "handshake_server_point_len"):
-    #     stream['tls']['handshake_echde_server_pubkey_len'] = tls_payload.handshake_server_point_len
-    # if hasattr(tls_payload, "handshake_client_point_len"):
-    #     stream['tls']['handshake_echde_client_pubkey_len'] = tls_payload.handshake_client_point_len        
     return stream
 def flatten(d, parent_key='', sep='_'):
     items = []
