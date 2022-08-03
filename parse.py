@@ -53,7 +53,6 @@ def get_tls_payload(tls_payload, stream):
             stream['tls']['ec_points_format_length'] = int(tls_payload.handshake_extensions_ec_point_formats_length)
     if hasattr(tls_payload, 'handshake_extensions_key_share_group') and tls_payload.handshake_type == '2':
             stream['tls']['selected_group'] = tls_payload.handshake_extensions_key_share_group
-    
     if hasattr(tls_payload, "handshake_type") and tls_payload.handshake_type == '2':
         stream['tls']['version'] = tls_payload.handshake_extensions_supported_version if hasattr(tls_payload,"handshake_extensions_supported_version") else '0x0303' 
     if hasattr(tls_payload, 'handshake_extensions_key_share_group'):

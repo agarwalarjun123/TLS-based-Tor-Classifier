@@ -27,7 +27,7 @@ def train(FILE_NAME):
         accuracy[model_name] = accuracy_score(predictions, y_test)
         precision[model_name] = precision_score(predictions, y_test)
         recall[model_name] = recall_score(predictions, y_test)
-        print(confusion_matrix(y_test, predictions))
+        print("confusion_matrix",confusion_matrix(y_test, predictions))
     df_model = pd.DataFrame(index=models.keys(),columns=['Accuracy','Precision','Recall'])  
     df_model['Accuracy'] = accuracy.values()
     df_model['Precision'] = precision.values()
@@ -47,11 +47,7 @@ def load_models(train = False):
     return models
 def preprocess(df):
     df = df[['tls_version','tls_max_client_tls_version','tls_cipher_suites_length','tls_supported_group_length','tls_key_share_length','tls_selected_group','tls_handshake_ciphersuite','tls_key_share_group','tls_ec_points_format_length','tls_sig_hash_alg_length','tls_cert_length','tls_cert_size','tls_handshake_extensions_length']].dropna(subset=['tls_version'])
-    print(df.shape)
-    for column in  df.columns:
-        print(column)
     ohe = LabelEncoder()
-
     df['tls_version'] = ohe.fit_transform(df['tls_version'])
     ohe = LabelEncoder()
     df['tls_max_client_tls_version'] = ohe.fit_transform(df[['tls_max_client_tls_version']])
