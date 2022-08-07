@@ -9,7 +9,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import OrdinalEncoder, LabelEncoder
+from sklearn.preprocessing import  LabelEncoder
 import os
 import pickle
 import argparse
@@ -56,8 +56,7 @@ def preprocess(df):
     # tls_version_dict = {'tls_version':{'0x304': 1.3,'0x303': 1.2,'0x0304': 1.3,'0x0303': 1.2},'tls_max_client_tls_version':{'0x304': 1.3,'0x303': 1.2,'0x0304': 1.3,'0x0303': 1.2},'tls_handshake_ciphersuite': {'0x1301': 1,'0xc030': 2,'0x1302': 3,'0xc02f': 4,'0xc02b': 5,'0xc02c': 6, '0x009d': 7,'0x0035': 8 }}
     # data = data.replace(tls_version_dict)
     data = df.replace(np.nan,-1, regex=True)
-    X = np.array(data)
-    return X
+    return np.array(data)
 def test(modelName, TEST_FILE_PATH, RESULT_FILE_PATH):
     df = pd.read_csv(TEST_FILE_PATH).dropna(subset=['tls_version'])
     X = preprocess(df)
@@ -84,5 +83,3 @@ if __name__ == '__main__':
         train(args.input)
     elif args.m == 'test':
         test(args.a,args.input,args.output)
-
-    
