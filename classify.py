@@ -53,8 +53,6 @@ def preprocess(df):
     df['tls_max_client_tls_version'] = ohe.fit_transform(df[['tls_max_client_tls_version']])
     ohe = LabelEncoder()
     df['tls_handshake_ciphersuite'] = ohe.fit_transform(df[['tls_handshake_ciphersuite']])
-    # tls_version_dict = {'tls_version':{'0x304': 1.3,'0x303': 1.2,'0x0304': 1.3,'0x0303': 1.2},'tls_max_client_tls_version':{'0x304': 1.3,'0x303': 1.2,'0x0304': 1.3,'0x0303': 1.2},'tls_handshake_ciphersuite': {'0x1301': 1,'0xc030': 2,'0x1302': 3,'0xc02f': 4,'0xc02b': 5,'0xc02c': 6, '0x009d': 7,'0x0035': 8 }}
-    # data = data.replace(tls_version_dict)
     data = df.replace(np.nan,-1, regex=True)
     return np.array(data)
 def test(modelName, TEST_FILE_PATH, RESULT_FILE_PATH):
