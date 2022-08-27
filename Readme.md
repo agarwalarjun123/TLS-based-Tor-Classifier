@@ -14,9 +14,11 @@ tor-tls-1-2.pcap, tor-tls-1-3.pcap.
 
 ### STEPS TO TRAIN THE DATASET
 
-1. Install python packages.
+1. Setup VirtualEnv and install python packages.
 
 ```sh
+python3 -m virtualenv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -59,6 +61,8 @@ python3 time_experiment.py
 ```
 
 ### STEPS TO RUN THE TOR TRAFFIC GENERATOR
+
+Note: Will work only on MAC / Linux.
 
 1. Update "torBundlePath" in tor_traffic_generate.py to the path of the bundle.
 2. Run the tor_traffic_generate.py
