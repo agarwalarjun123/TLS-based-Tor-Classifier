@@ -4,8 +4,7 @@
 
 Tor Classifier on TLS Features with 99% Overall Accuracy. Repository contains the dataset,scripts used to parse the raw dataset into CSV, and classifier CLI to train and test flows.
 
-Dataset - chrome-tls-1-3.pcap, firefox-tls-1-3.pcap, firefox-tls-1-2.pcap,
-tor-tls-1-2.pcap, tor-tls-1-3.pcap.
+Download Dataset from https://gla-my.sharepoint.com/:u:/g/personal/2654219a_student_gla_ac_uk/EWbY_iXWpJFGtqvclfAhrOIBsmNe325q9lBVRbGr1MlFAA?e=7g03DM
 
 ### PREREQUISITE
 
